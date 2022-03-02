@@ -56,52 +56,25 @@ func Test_makeProbes_useHTTPProbe(t *testing.T) {
 	}
 }
 
-func Test_makeProbes_useCustomHTTPProbe(t *testing.T) {
-	f := mockFactory()
-	customPath := "/healthz"
-	request := types.FunctionDeployment{
-		Service:                "testfunc",
-		ReadOnlyRootFilesystem: false,
-		Annotations: &map[string]string{
-			ProbePath: customPath,
-		},
-	}
-
-	probes, err := f.MakeProbes(request)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if probes.Readiness.HTTPGet == nil {
-		t.Errorf("Readiness probe should have had HTTPGet handler")
-		t.Fail()
-	}
-	if probes.Readiness.HTTPGet.Path != customPath {
-		t.Errorf("Readiness probe should have had HTTPGet handler set to %s", customPath)
-		t.Fail()
-	}
-
-	if probes.Liveness.HTTPGet == nil {
-		t.Errorf("Liveness probe should have had HTTPGet handler")
-		t.Fail()
-	}
-	if probes.Liveness.HTTPGet.Path != customPath {
-		t.Errorf("Readiness probe should have had HTTPGet handler set to %s", customPath)
-		t.Fail()
-	}
-}
-
 func Test_makeProbes_useCustomDurationHTTPProbe(t *testing.T) {
 	f := mockFactory()
 	f.Config.HTTPProbe = true
-	customDelay := "2m"
+	f.Config.LivenessProbe = &ProbeConfig{
+		PeriodSeconds:       1,
+		TimeoutSeconds:      3,
+		InitialDelaySeconds: 0,
+	}
+	f.Config.ReadinessProbe = &ProbeConfig{
+		PeriodSeconds:       1,
+		TimeoutSeconds:      3,
+		InitialDelaySeconds: 0,
+	}
+
+	customDelay := "0"
 
 	request := types.FunctionDeployment{
 		Service:                "testfunc",
 		ReadOnlyRootFilesystem: false,
-		Annotations: &map[string]string{
-			ProbeInitialDelay: customDelay,
-		},
 	}
 
 	probes, err := f.MakeProbes(request)
@@ -113,7 +86,7 @@ func Test_makeProbes_useCustomDurationHTTPProbe(t *testing.T) {
 		t.Errorf("Readiness probe should have had HTTPGet handler")
 		t.Fail()
 	}
-	if probes.Readiness.InitialDelaySeconds != 120 {
+	if probes.Readiness.InitialDelaySeconds != 0 {
 		t.Errorf("Readiness probe should have initial delay seconds set to %s", customDelay)
 		t.Fail()
 	}
@@ -122,7 +95,7 @@ func Test_makeProbes_useCustomDurationHTTPProbe(t *testing.T) {
 		t.Errorf("Liveness probe should have had HTTPGet handler")
 		t.Fail()
 	}
-	if probes.Liveness.InitialDelaySeconds != 120 {
+	if probes.Liveness.InitialDelaySeconds != 0 {
 		t.Errorf("Readiness probe should have had HTTPGet handler set to %s", customDelay)
 		t.Fail()
 	}

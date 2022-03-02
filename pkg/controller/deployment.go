@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	faasv1 "github.com/openfaas/faas-netes/pkg/apis/openfaas/v1"
@@ -47,7 +46,7 @@ func newDeployment(
 	}
 
 	annotations := makeAnnotations(function)
-
+  
 	var serviceAccount string
 
 	if function.Spec.Annotations != nil {
@@ -120,8 +119,7 @@ func newDeployment(
 					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
-					NodeSelector:                  nodeSelector,
-					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					NodeSelector: nodeSelector,
 					Containers: []corev1.Container{
 						{
 							Name:  function.Spec.Name,
@@ -143,10 +141,6 @@ func newDeployment(
 				},
 			},
 		},
-	}
-
-	if len(serviceAccount) > 0 {
-		deploymentSpec.Spec.Template.Spec.ServiceAccountName = serviceAccount
 	}
 
 	factory.ConfigureReadOnlyRootFilesystem(function, deploymentSpec)
