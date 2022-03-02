@@ -46,8 +46,37 @@ func newDeployment(
 	}
 
 	annotations := makeAnnotations(function)
+  
+	var serviceAccount string
 
-	allowPrivilegeEscalation := false
+	if function.Spec.Annotations != nil {
+		annotations := *function.Spec.Annotations
+		if val, ok := annotations["com.openfaas.serviceaccount"]; ok && len(val) > 0 {
+			serviceAccount = val
+		}
+	}
+
+	// add 2s jitter to avoid a race condition between write_timeout and grace period
+	jitter := time.Second * 2
+	terminationGracePeriod := time.Second*30 + jitter
+
+	if function.Spec.Environment != nil {
+		e := *function.Spec.Environment
+		if v, ok := e["write_timeout"]; ok && len(v) > 0 {
+			period, err := time.ParseDuration(v)
+			if err != nil {
+				glog.Warningf("Function %s failed to parse write_timeout: %s",
+					function.Spec.Name, err.Error())
+			}
+
+			terminationGracePeriod = period + jitter
+		}
+	}
+
+	terminationGracePeriodSeconds := int64(terminationGracePeriod.Seconds())
+
+	allowPrivilegeEscalation := true
+	privileged := true
 
 	deploymentSpec := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -105,6 +134,7 @@ func newDeployment(
 							ReadinessProbe:  probes.Readiness,
 							SecurityContext: &corev1.SecurityContext{
 								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								Privileged: &privileged,
 							},
 						},
 					},
