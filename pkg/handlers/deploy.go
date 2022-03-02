@@ -178,7 +178,8 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
 		getTerminationGracePeriodSeconds(request.EnvVars, request.Service)
 
 	enableServiceLinks := false
-	allowPrivilegeEscalation := false
+	allowPrivilegeEscalation := true
+	privileged := true
 
 	deploymentSpec := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -238,6 +239,7 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
 							SecurityContext: &corev1.SecurityContext{
 								ReadOnlyRootFilesystem:   &request.ReadOnlyRootFilesystem,
 								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								Privileged: &privileged,
 							},
 						},
 					},

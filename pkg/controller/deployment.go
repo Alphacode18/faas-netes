@@ -76,7 +76,8 @@ func newDeployment(
 
 	terminationGracePeriodSeconds := int64(terminationGracePeriod.Seconds())
 
-	allowPrivilegeEscalation := false
+	allowPrivilegeEscalation := true
+	privileged := true
 
 	deploymentSpec := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -135,6 +136,7 @@ func newDeployment(
 							ReadinessProbe:  probes.Readiness,
 							SecurityContext: &corev1.SecurityContext{
 								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								Privileged: &privileged,
 							},
 						},
 					},

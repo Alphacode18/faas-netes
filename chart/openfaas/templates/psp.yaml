@@ -12,12 +12,12 @@ metadata:
     annotations:
         seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
 spec:
-    privileged: false
+    privileged: true
     hostIPC: false
     hostNetwork: false
     hostPID: false
     readOnlyRootFilesystem: false
-    allowPrivilegeEscalation: false
+    allowPrivilegeEscalation: true
     allowedCapabilities:
         - NET_ADMIN
         - NET_RAW
